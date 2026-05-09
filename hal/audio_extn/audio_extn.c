@@ -58,6 +58,8 @@
 #include "edid.h"
 #include "sound/compress_params.h"
 
+#include "tfa_98xx.h"
+
 #ifdef AUDIO_GKI_ENABLED
 #include "sound/audio_compressed_formats.h"
 #endif
@@ -2269,93 +2271,25 @@ void audio_extn_extspk_set_voice_vol(void* extn, float vol) {
 
 
 //START: EXTERNAL_SPEAKER_TFA ================================================================
-#ifdef __LP64__
-#define EXTERNAL_SPKR_TFA_LIB_PATH  "/vendor/lib64/libextspkr_tfa.so"
-#else
-#define EXTERNAL_SPKR_TFA_LIB_PATH  "/vendor/lib/libextspkr_tfa.so"
-#endif
-
-static void *external_speaker_tfa_lib_handle = NULL;
-
-typedef int (*external_speaker_tfa_enable_t)(void);
-static external_speaker_tfa_enable_t external_speaker_tfa_enable;
-
-typedef void (*external_speaker_tfa_disable_t)(snd_device_t);
-static external_speaker_tfa_disable_t external_speaker_tfa_disable;
-
-typedef void (*external_speaker_tfa_set_mode_t)();
-static external_speaker_tfa_set_mode_t external_speaker_tfa_set_mode;
-
-typedef void (*external_speaker_tfa_set_mode_bt_t)();
-static external_speaker_tfa_set_mode_bt_t external_speaker_tfa_set_mode_bt;
-
-typedef void (*external_speaker_tfa_update_t)(void);
-static external_speaker_tfa_update_t external_speaker_tfa_update;
-
-typedef void (*external_speaker_tfa_set_voice_vol_t)(float);
-static external_speaker_tfa_set_voice_vol_t external_speaker_tfa_set_voice_vol;
-
-typedef int (*external_speaker_tfa_init_t)(struct audio_device *);
-static external_speaker_tfa_init_t external_speaker_tfa_init;
-
-typedef void (*external_speaker_tfa_deinit_t)(void);
-static external_speaker_tfa_deinit_t external_speaker_tfa_deinit;
-
-typedef bool (*external_speaker_tfa_is_supported_t)(void);
-static external_speaker_tfa_is_supported_t external_speaker_tfa_is_supported;
-
 void external_speaker_tfa_feature_init(bool is_feature_enabled)
 {
     ALOGD("%s: Called with feature %s", __func__, is_feature_enabled?"Enabled":"NOT Enabled");
     if (is_feature_enabled) {
-        //dlopen lib
-        external_speaker_tfa_lib_handle = dlopen(EXTERNAL_SPKR_TFA_LIB_PATH, RTLD_NOW);
-        if (external_speaker_tfa_lib_handle == NULL) {
-            ALOGE("%s: dlopen failed", __func__);
+		//open dylib
+        tfa98xx_speaker_data = open_speaker_bundle();
+        if (tfa98xx_speaker_data == NULL) {
+            ALOGE("%s: open_speaker_bundle failed", __func__);
             goto feature_disabled;
         }
-        //map each function
-        //on any faliure to map any function, disble feature
-        if (((external_speaker_tfa_enable =
-             (external_speaker_tfa_enable_t)dlsym(external_speaker_tfa_lib_handle, "tfa_98xx_enable_speaker")) == NULL) ||
-            ((external_speaker_tfa_disable =
-             (external_speaker_tfa_disable_t)dlsym(external_speaker_tfa_lib_handle, "tfa_98xx_disable_speaker")) == NULL) ||
-            ((external_speaker_tfa_set_mode =
-             (external_speaker_tfa_set_mode_t)dlsym(external_speaker_tfa_lib_handle, "tfa_98xx_set_mode")) == NULL) ||
-            ((external_speaker_tfa_set_mode_bt =
-             (external_speaker_tfa_set_mode_bt_t)dlsym(external_speaker_tfa_lib_handle, "tfa_98xx_set_mode_bt")) == NULL) ||
-            ((external_speaker_tfa_update =
-             (external_speaker_tfa_update_t)dlsym(external_speaker_tfa_lib_handle, "tfa_98xx_update")) == NULL) ||
-            ((external_speaker_tfa_set_voice_vol =
-             (external_speaker_tfa_set_voice_vol_t)dlsym(external_speaker_tfa_lib_handle, "tfa_98xx_set_voice_vol")) == NULL) ||
-            ((external_speaker_tfa_init =
-             (external_speaker_tfa_init_t)dlsym(external_speaker_tfa_lib_handle, "tfa_98xx_init")) == NULL) ||
-            ((external_speaker_tfa_deinit =
-             (external_speaker_tfa_deinit_t)dlsym(external_speaker_tfa_lib_handle, "tfa_98xx_deinit")) == NULL) ||
-            ((external_speaker_tfa_is_supported =
-             (external_speaker_tfa_is_supported_t)dlsym(external_speaker_tfa_lib_handle, "tfa_98xx_is_supported")) == NULL)) {
-            ALOGE("%s: dlsym failed", __func__);
-            goto feature_disabled;
-        }
-
-        ALOGD("%s:: ---- Feature EXTERNAL_SPKR is Enabled ----", __func__);
+        ALOGD("%s: ---- Feature EXTERNAL_SPKR_TFA is Enabled ----", __func__);
         return;
     }
 
 feature_disabled:
-    if (external_speaker_tfa_lib_handle) {
-        dlclose(external_speaker_tfa_lib_handle);
-        external_speaker_tfa_lib_handle = NULL;
+    if (tfa98xx_speaker_data!=NULL) {
+        close_speaker_bundle(tfa98xx_speaker_data);
+        tfa98xx_speaker_data = NULL;
     }
-
-    external_speaker_tfa_enable = NULL;
-    external_speaker_tfa_disable = NULL;
-    external_speaker_tfa_set_mode = NULL;
-    external_speaker_tfa_update = NULL;
-    external_speaker_tfa_set_voice_vol = NULL;
-    external_speaker_tfa_init = NULL;
-    external_speaker_tfa_deinit = NULL;
-    external_speaker_tfa_is_supported = NULL;
 
     ALOGW(":: %s: ---- Feature EXTERNAL_SPKR_TFA is disabled ----", __func__);
     return;
