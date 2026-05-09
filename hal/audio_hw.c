@@ -1595,6 +1595,7 @@ int disable_snd_device(struct audio_device *adev,
         ALOGE("%s: device ref cnt is already 0", __func__);
         return -EINVAL;
     }
+	audio_extn_external_speaker_tfa_disable_speaker(snd_device);
 
     adev->snd_dev_ref_cnt[snd_device]--;
 
@@ -3069,6 +3070,8 @@ int select_devices(struct audio_device *adev, audio_usecase_t uc_id)
     usecase->in_snd_device = in_snd_device;
     usecase->out_snd_device = out_snd_device;
 
+	audio_extn_external_speaker_tfa_set_mode(false);
+
     audio_extn_utils_update_stream_app_type_cfg_for_usecase(adev,
                                                             usecase);
     if (usecase->type == PCM_PLAYBACK) {
@@ -4279,7 +4282,8 @@ int start_output_stream(struct stream_out *out)
     }
     audio_streaming_hint_end();
     audio_extn_perf_lock_release(&adev->perf_lock_handle);
-    ALOGD("%s: exit", __func__);
+    audio_extn_external_speaker_tfa_enable_speaker();
+	ALOGD("%s: exit", __func__);
 
     if (out->usecase == USECASE_AUDIO_PLAYBACK_ULL ||
         out->usecase == USECASE_AUDIO_PLAYBACK_MMAP) {
@@ -5097,6 +5101,7 @@ int route_output_stream(struct stream_out *out,
                 select_devices(adev, out->usecase);
                 assign_devices(&out->device_list, &new_devices);
             }
+			audio_extn_external_speaker_tfa_update();
 
             if (!same_dev) {
                 // on device switch force swap, lower functions will make sure
@@ -9268,7 +9273,12 @@ static int adev_set_mic_mute(struct audio_hw_device *dev, bool state)
 
     pthread_mutex_lock(&adev->lock);
     ALOGD("%s state %d\n", __func__, state);
-    ret = voice_set_mic_mute((struct audio_device *)dev, state);
+    
+	if(audio_extn_external_speaker_tfa_is_supported() &&adev->enable_hfp){
+		ret = audio_extn_hfp_set_mic_mute(adev,state);
+	}else{
+		ret = voice_set_mic_mute(adev, state);
+	}
 
     if (adev->ext_hw_plugin)
         ret = audio_extn_ext_hw_plugin_set_mic_mute(adev->ext_hw_plugin, state);
@@ -9391,7 +9401,11 @@ static int adev_open_input_stream(struct audio_hw_device *dev,
     struct stream_in *in;
     int ret = 0, buffer_size, frame_size;
     int channel_count = audio_channel_count_from_in_mask(config->channel_mask);
-    bool is_low_latency = false;
+    
+	if(audio_extn_external_speaker_tfa_is_supported() && (audio_extn_hfp_is_active(adev)||voice_is_in_call(adev)))
+		return -EINVAL;
+	
+	bool is_low_latency = false;
     bool channel_mask_updated = false;
     bool is_usb_dev = audio_is_usb_in_device(devices);
     bool may_use_hifi_record = adev_input_allow_hifi_record(adev,
@@ -10396,6 +10410,7 @@ static int adev_close(hw_device_t *device)
              audio_extn_spkr_prot_deinit();
         audio_extn_battery_properties_listener_deinit();
         audio_extn_snd_mon_unregister_listener(adev);
+		audio_extn_external_speaker_tfa_deinit();
         audio_extn_sound_trigger_deinit(adev);
         audio_extn_listen_deinit(adev);
         audio_extn_qdsp_deinit();
@@ -10900,6 +10915,7 @@ static int adev_open(const hw_module_t *module, const char *name,
      * the callback value will reflect the latest state
      */
     adev->is_charging = audio_extn_battery_properties_is_charging();
+	audio_extn_external_tfa_speaker_init(adev);
     audio_extn_sound_trigger_init(adev); /* dependent on snd_mon_init() */
     audio_extn_sound_trigger_update_battery_status(adev->is_charging);
     audio_extn_audiozoom_init();

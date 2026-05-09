@@ -155,6 +155,7 @@ cc_library_shared {
 
     srcs: [
         "hfp.c",
+		"tfa_98xx.c",
         "device_utils.c",
     ],
 

@@ -1458,4 +1458,14 @@ snd_device_t audio_extn_get_loopback_snd_device(struct audio_device *adev,
                                                 int channel_count);
 
 void audio_get_vendor_config_path(char* config_file_path, int path_size);
+
+int audio_extn_external_speaker_tfa_enable_speaker();
+void audio_extn_external_speaker_tfa_disable_speaker(snd_device_t snd_device);
+void audio_extn_external_speaker_tfa_set_mode(bool is_mode_bt);
+void audio_extn_external_speaker_tfa_update();
+void audio_extn_external_speaker_tfa_set_voice_vol(float vol);
+int  audio_extn_external_tfa_speaker_init(struct audio_device *adev);
+void audio_extn_external_speaker_tfa_deinit();
+bool audio_extn_external_speaker_tfa_is_supported();
+
 #endif /* AUDIO_EXTN_H */

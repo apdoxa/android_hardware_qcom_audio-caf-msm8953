@@ -193,13 +193,13 @@ static exTfa98xx_audio_mode_t tfa_98xx_get_audio_mode(struct speaker_data *data)
 
     list_for_each(node, &data->adev->usecase_list) {
         usecase = node_to_item(node, struct audio_usecase, list);
-        if (usecase->devices & AUDIO_DEVICE_OUT_ALL_SCO) {
+        if (usecase->out_snd_device & AUDIO_DEVICE_OUT_ALL_SCO) {
             if(data->adev->snd_dev_ref_cnt[usecase->out_snd_device] != 0) {
                 tfa_98xx_audio_mode = Audio_Mode_Hs_Hfp;
                 data->route_cnt[tfa_98xx_audio_mode]++;
                 ALOGV("%s: audio_mode hs_hfp\n", __func__);
             }
-        } else if (usecase->devices & AUDIO_DEVICE_OUT_SPEAKER) {
+        } else if (usecase->out_snd_device & AUDIO_DEVICE_OUT_SPEAKER) {
             if ((mode == AUDIO_MODE_IN_CALL) || audio_extn_hfp_is_active(data->adev)) {
                 if (audio_extn_hfp_is_active(data->adev)) {
                     if(data->adev->snd_dev_ref_cnt[usecase->out_snd_device] != 0) {

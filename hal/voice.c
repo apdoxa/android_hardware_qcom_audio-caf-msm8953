@@ -203,6 +203,11 @@ int voice_stop_usecase(struct audio_device *adev, audio_usecase_t usecase_id)
     disable_snd_device(adev, uc_info->out_snd_device);
     disable_snd_device(adev, uc_info->in_snd_device);
 
+	if (audio_extn_external_speaker_tfa_is_supported() && voice_get_mic_mute(adev)) {
+        voice_set_mic_mute(adev, false);
+        ALOGD("%s: unMute voice Tx", __func__);
+    }
+
     adev->voice.lte_call = false;
     adev->voice.uc_active = false;
 
@@ -356,6 +361,7 @@ int voice_start_usecase(struct audio_device *adev, audio_usecase_t usecase_id)
         ALOGE("%s: %s", __func__, pcm_get_error(session->pcm_rx));
         goto error_start_voice;
     }
+	audio_extn_external_speaker_tfa_enable_speaker();
 
 #ifdef PLATFORM_AUTO
     ret = pcm_start(voice_loopback_tx);
@@ -868,6 +874,7 @@ void voice_update_devices_for_all_voice_usecases(struct audio_device *adev)
                   use_case_table[usecase->id]);
             usecase->stream.out = adev->current_call_output;
             select_devices(adev, usecase->id);
+			audio_extn_external_speaker_tfa_update();
         }
     }
 }

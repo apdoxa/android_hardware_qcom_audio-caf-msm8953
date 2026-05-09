@@ -2298,38 +2298,38 @@ feature_disabled:
 int audio_extn_external_speaker_tfa_enable_speaker() {
     int ret_val = 0;
 
-    if (external_speaker_tfa_enable != NULL)
-        ret_val = external_speaker_tfa_enable();
+    if (tfa98xx_speaker_data!=NULL)
+        ret_val = audio_extn_tfa_98xx_enable_speaker();
 
     return ret_val;
 }
 
 void audio_extn_external_speaker_tfa_disable_speaker(snd_device_t snd_device) {
-    if (external_speaker_tfa_disable != NULL)
-        external_speaker_tfa_disable(snd_device);
+    if (tfa98xx_speaker_data!=NULL)
+        audio_extn_tfa_98xx_disable_speaker(snd_device);
 
     return;
 }
 
 void audio_extn_external_speaker_tfa_set_mode(bool is_mode_bt) {
-    if (is_mode_bt && (external_speaker_tfa_set_mode_bt != NULL))
-        external_speaker_tfa_set_mode_bt();
-    else if (external_speaker_tfa_set_mode != NULL)
-        external_speaker_tfa_set_mode();
+    if (is_mode_bt && (tfa98xx_speaker_data!=NULL))
+        audio_extn_tfa_98xx_set_mode_bt();
+    else if (tfa98xx_speaker_data != NULL)
+        audio_extn_tfa_98xx_set_mode();
 
     return;
 }
 
 void audio_extn_external_speaker_tfa_update() {
-    if (external_speaker_tfa_update != NULL)
-        external_speaker_tfa_update();
+    if (tfa98xx_speaker_data!=NULL)
+        audio_extn_tfa_98xx_update();
 
     return;
 }
 
 void audio_extn_external_speaker_tfa_set_voice_vol(float vol) {
-    if (external_speaker_tfa_set_voice_vol != NULL)
-        external_speaker_tfa_set_voice_vol(vol);
+    if (tfa98xx_speaker_data!=NULL)
+        audio_extn_tfa_98xx_set_voice_vol(vol);
 
     return;
 }
@@ -2337,15 +2337,15 @@ void audio_extn_external_speaker_tfa_set_voice_vol(float vol) {
 int  audio_extn_external_tfa_speaker_init(struct audio_device *adev) {
     int ret_val = 0;
 
-    if (external_speaker_tfa_init != NULL)
-        ret_val = external_speaker_tfa_init(adev);
+    if (tfa98xx_speaker_data!=NULL)
+        ret_val = audio_extn_tfa_98xx_init(adev);
 
     return ret_val;
 }
 
 void audio_extn_external_speaker_tfa_deinit() {
-    if (external_speaker_tfa_deinit != NULL)
-        external_speaker_tfa_deinit();
+    if (tfa98xx_speaker_data!=NULL)
+        audio_extn_tfa_98xx_deinit();
 
     return;
 }
@@ -2353,8 +2353,8 @@ void audio_extn_external_speaker_tfa_deinit() {
 bool audio_extn_external_speaker_tfa_is_supported() {
     bool ret_val = false;
 
-    if (external_speaker_tfa_is_supported != NULL)
-        ret_val = external_speaker_tfa_is_supported;
+    if (tfa98xx_speaker_data!=NULL)
+        ret_val = audio_extn_tfa_98xx_is_supported();
 
     return ret_val;
 }

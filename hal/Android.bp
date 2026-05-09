@@ -29,6 +29,7 @@ target_board_platform_cc_library_shared {
         "platform_info.c",
         "voice.c",
         "audio_extn/audio_extn.c",
+		"audio_extn/tfa_98xx.c",
         "audio_extn/audio_hidl.cpp",
         "audio_extn/compress_in.c",
         "audio_extn/device_utils.c",

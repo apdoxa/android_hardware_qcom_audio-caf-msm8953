@@ -145,6 +145,7 @@ static int32_t hfp_set_volume(struct audio_device *adev, float value)
     ALOGD("%s: (%f)\n", __func__, value);
 
     hfpmod.hfp_volume = value;
+	audio_extn_external_speaker_tfa_set_voice_vol(value);
 
     if (value < 0.0) {
         ALOGW("%s: (%f) Under 0.0, assuming 0.0\n", __func__, value);
@@ -329,6 +330,8 @@ static int32_t start_hfp(struct audio_device *adev,
 
     list_add_tail(&adev->usecase_list, &uc_info->list);
 
+	audio_extn_external_speaker_tfa_set_mode(true);
+
     fp_select_devices(adev, hfpmod.ucid);
 
     if ((uc_info->out_snd_device != SND_DEVICE_NONE) ||
@@ -392,7 +395,6 @@ static int32_t start_hfp(struct audio_device *adev,
         ret = -EIO;
         goto exit;
     }
-
     hfpmod.hfp_sco_tx = pcm_open(adev->snd_card,
                                   pcm_dev_asm_tx_id,
                                   PCM_IN, &pcm_config_hfp);
@@ -401,7 +403,6 @@ static int32_t start_hfp(struct audio_device *adev,
         ret = -EIO;
         goto exit;
     }
-
     if (pcm_start(hfpmod.hfp_sco_rx) < 0) {
         ALOGE("%s: pcm start for hfp sco rx failed", __func__);
         ret = -EINVAL;
@@ -412,6 +413,8 @@ static int32_t start_hfp(struct audio_device *adev,
         ret = -EINVAL;
         goto exit;
     }
+
+	audio_extn_external_speaker_tfa_enable_speaker();
 
     hfpmod.is_hfp_running = true;
     hfp_set_volume(adev, hfpmod.hfp_volume);
